@@ -18,8 +18,11 @@ const SOCIAL_DOMAINS = {
  * Regex untuk menemukan pola nomor telepon umum.
  * Contoh: (021) 1234567, +62 812-345-678
  */
+// const PHONE_REGEX =
+//   /(\+?\d{2,4}[\s\.\-\(\)]*\d{2,}[\s\.\-\(\)]*\d{2,}[\s\.\-\(\)]*\d{2,})/g;
 const PHONE_REGEX =
-  /(\+?\d{2,4}[\s\.\-\(\)]*\d{2,}[\s\.\-\(\)]*\d{2,}[\s\.\-\(\)]*\d{2,})/g;
+  // Mencocokkan: +62 8xx atau 08xx atau (0274) 1234567
+  /(\+?62|0)([.\s]?)(\d{2,4})[.\s\-]?(\d{3,4})[.\s\-]?(\d{3,4})/g;
 
 /**
  * Regex standar untuk menemukan pola alamat email.
