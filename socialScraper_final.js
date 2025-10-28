@@ -20,9 +20,19 @@ const SOCIAL_DOMAINS = {
  */
 // const PHONE_REGEX =
 //   /(\+?\d{2,4}[\s\.\-\(\)]*\d{2,}[\s\.\-\(\)]*\d{2,}[\s\.\-\(\)]*\d{2,})/g;
+// const PHONE_REGEX =
+//   // Mencocokkan: +62 8xx atau 08xx atau (0274) 1234567
+//   /(\+?62|0)([.\s]?)(\d{2,4})[.\s\-]?(\d{3,4})[.\s\-]?(\d{3,4})/g;
+
 const PHONE_REGEX =
-  // Mencocokkan: +62 8xx atau 08xx atau (0274) 1234567
-  /(\+?62|0)([.\s]?)(\d{2,4})[.\s\-]?(\d{3,4})[.\s\-]?(\d{3,4})/g;
+  // Pola 1: Nomor Seluler Padat (+62 atau 08)
+  /\b(\+?62|08)\d{8,12}\b/g +
+  "|" + // ATAU
+  // Pola 2: Nomor Lokal Padat (Area Kode 02xx)
+  "\\b02\\d{7,9}\\b" +
+  "|" + // ATAU
+  // Pola 3: Nomor Terformat
+  "\\b(\\+?\\d{1,4}[\\s\\.\\-]?\\d{2,4}[\\s\\.\\-]?\\d{3,4}[\\s\\.\\-]?\\d{3,4})\\b";
 
 /**
  * Regex standar untuk menemukan pola alamat email.
