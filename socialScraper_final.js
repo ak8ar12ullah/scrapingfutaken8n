@@ -1,9 +1,9 @@
-// scraper.js (atau nama file Anda)
+// scraper.js
 
 // 1. Ubah require() menjadi import
 import puppeteer from "puppeteer";
 
-// 2. Variabel dan Konstanta (Tidak perlu diubah)
+// 2. Variabel dan Konstanta
 const SOCIAL_DOMAINS = {
   instagram: "instagram.com",
   facebook: "facebook.com",
@@ -15,20 +15,14 @@ const SOCIAL_DOMAINS = {
 };
 
 /**
- * Regex untuk menemukan pola nomor telepon umum.
- * Contoh: (021) 1234567, +62 812-345-678
+ * Regex String untuk menemukan pola nomor telepon Indonesia yang valid.
+ * Pola gabungan: Nomor padat (+62/08/02xx) ATAU Nomor terformat fleksibel.
  */
-// const PHONE_REGEX =
-//   /(\+?\d{2,4}[\s\.\-\(\)]*\d{2,}[\s\.\-\(\)]*\d{2,}[\s\.\-\(\)]*\d{2,})/g;
-// const PHONE_REGEX =
-//   // Mencocokkan: +62 8xx atau 08xx atau (0274) 1234567
-//   /(\+?62|0)([.\s]?)(\d{2,4})[.\s\-]?(\d{3,4})[.\s\-]?(\d{3,4})/g;
-
 const PHONE_REGEX_STRING =
-  // Pola 1: Nomor Seluler Padat (+62 atau 08). Paling aman dari pola tanggal.
+  // Pola 1: Nomor Seluler Padat (+62 atau 08), wajib 9-14 digit total. Paling aman dari pola tanggal.
   "\\b(\\+?62|08)\\d{8,12}\\b" +
   "|" + // ATAU
-  // Pola 2: Nomor Lokal Padat (Area Kode 02xx).
+  // Pola 2: Nomor Lokal Padat (Area Kode 02xx), wajib 9-11 digit total.
   "\\b02\\d{7,9}\\b" +
   "|" + // ATAU
   // Pola 3: Nomor Terformat (Fleksibel dengan Spasi/Hyphen/Titik).
@@ -43,7 +37,7 @@ const PHONE_REGEX = new RegExp(PHONE_REGEX_STRING, "g");
  */
 const EMAIL_REGEX = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g;
 
-// 3. Fungsi Utama (Tidak ada perubahan signifikan, hanya penulisan)
+// 3. Fungsi Utama
 export async function scrapeSocialMedia(url) {
   let browser;
   const foundUrlsMap = new Map();
@@ -66,16 +60,13 @@ export async function scrapeSocialMedia(url) {
     await page.setViewport({ width: 1280, height: 720 });
     await page.setRequestInterception(true);
 
-    // --- LANGKAH PENTING 2: Tambahkan Listener Intersepsi ---
+    // --- Tambahkan Listener Intersepsi ---
     page.on("request", (request) => {
-      // Tentukan tipe resource yang ingin Anda blokir
       const blockedResources = ["image", "stylesheet", "font", "media"];
 
       if (blockedResources.includes(request.resourceType())) {
-        // Jika resourceType adalah salah satu yang diblokir, batalkan permintaan (abort)
         request.abort();
       } else {
-        // Jika bukan resource yang diblokir, lanjutkan permintaan (continue)
         request.continue();
       }
     });
@@ -114,7 +105,7 @@ export async function scrapeSocialMedia(url) {
           }
         }
 
-        // Cek tautan tel:
+        // Cek tautan tel: (Logika ini sudah benar)
         if (normalizedHref.startsWith("tel:")) {
           const cleanPhone = normalizedHref
             .replace("tel:", "")
@@ -138,11 +129,29 @@ export async function scrapeSocialMedia(url) {
 
     // Cari Nomor Telepon dalam teks
     let matchPhone;
-    // NOTE: Perlu mendefinisikan ulang regex di setiap perulangan saat menggunakan exec()
-    // untuk menghindari masalah `lastIndex` yang umum terjadi pada ES Module/Mode Strict
-    const newPhoneRegex = new RegExp(PHONE_REGEX, "g");
-    while ((matchPhone = newPhoneRegex.exec(pageText)) !== null) {
-      const cleanPhone = matchPhone[0].replace(/[\s\.\-\(\)]/g, "");
+
+    // Kloning objek Regex karena .exec() memodifikasi lastIndex
+    const phoneRegexClone = new RegExp(PHONE_REGEX);
+    phoneRegexClone.lastIndex = 0;
+
+    while ((matchPhone = phoneRegexClone.exec(pageText)) !== null) {
+      const rawPhone = matchPhone[0];
+
+      // Hapus semua pemisah dari hasil pencocokan
+      const cleanPhone = rawPhone.replace(/[\s\.\-\(\)]/g, "");
+
+      // *** FILTER PENGECUALIAN KRITIS (Mengatasi pola tanggal) ***
+      // Jika string angka dimulai dengan tahun yang dicurigai (2025) atau pola ID ganjil (5620/1220),
+      // kita anggap itu BUKAN nomor telepon.
+      if (
+        cleanPhone.startsWith("2025") ||
+        cleanPhone.startsWith("5620") ||
+        cleanPhone.startsWith("1220") ||
+        cleanPhone.startsWith("1300")
+      ) {
+        continue; // Lewati angka ini
+      }
+
       if (cleanPhone.length >= 7) {
         foundPhonesSet.add(cleanPhone);
       }
@@ -150,9 +159,11 @@ export async function scrapeSocialMedia(url) {
 
     // Cari Alamat Email dalam teks
     let matchEmail;
-    // NOTE: Sama seperti di atas, gunakan objek Regex baru
-    const newEmailRegex = new RegExp(EMAIL_REGEX, "g");
-    while ((matchEmail = newEmailRegex.exec(pageText)) !== null) {
+    // Kloning objek Regex
+    const emailRegexClone = new RegExp(EMAIL_REGEX);
+    emailRegexClone.lastIndex = 0;
+
+    while ((matchEmail = emailRegexClone.exec(pageText)) !== null) {
       foundEmailsSet.add(matchEmail[0]);
     }
 
@@ -179,11 +190,11 @@ export async function scrapeSocialMedia(url) {
 }
 
 // // 4. Contoh Penggunaan (Tanpa Perubahan)
-// const TARGET_URL = "https://uad.ac.id/"; // Contoh URL
+// // const TARGET_URL = "https://uad.ac.id/"; // Contoh URL
 
-// scrapeSocialMedia(TARGET_URL)
-//   .then((jsonResult) => {
-//     console.log("\n--- Hasil JSON ---");
-//     console.log(JSON.stringify(jsonResult, null, 2));
-//   })
-//   .catch((err) => console.error(err));
+// // scrapeSocialMedia(TARGET_URL)
+// //   .then((jsonResult) => {
+// //     console.log("\n--- Hasil JSON ---");
+// //     console.log(JSON.stringify(jsonResult, null, 2));
+// //   })
+// //   .catch((err) => console.error(err));
