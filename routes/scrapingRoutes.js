@@ -14,23 +14,32 @@ router.get("/website", async (req, res) => {
   } catch (error) {
     url = req.body.url;
   }
-  console.log(url);
-  const datas = await scrapeSocialMedia(url);
-  console.log(datas);
+  try {
+    console.log(url);
+    let i;
+    let datas = await scrapeSocialMedia(url);
 
-  //   if (!newUser.name || !newUser.email) {
-  //     // Menggunakan status 400 Bad Request
-  //     return res.status(400).json({ message: "Nama dan email harus diisi." });
-  //   }
+    console.log(datas);
 
-  //   newUser.id = users.length + 1; // ID sementara
-  //   users.push(newUser);
+    //   if (!newUser.name || !newUser.email) {
+    //     // Menggunakan status 400 Bad Request
+    //     return res.status(400).json({ message: "Nama dan email harus diisi." });
+    //   }
 
-  // Menggunakan status 201 Created
-  res.status(201).json({
-    message: url + " berhasil di scraping",
-    user: datas,
-  });
+    //   newUser.id = users.length + 1; // ID sementara
+    //   users.push(newUser);
+
+    // Menggunakan status 201 Created
+    res.status(201).json({
+      message: url + " berhasil di scraping",
+      user: datas,
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: url + " gagal di scraping",
+      user: error,
+    });
+  }
 });
 router.get("/maps", async (req, res) => {
   let url;
@@ -39,23 +48,30 @@ router.get("/maps", async (req, res) => {
   } catch (error) {
     url = req.body.url;
   }
-  console.log(url);
-  const datas = await mapsScraper(url);
-  console.log(datas);
+  try {
+    console.log(url);
+    const datas = await mapsScraper(url);
+    console.log(datas);
 
-  //   if (!newUser.name || !newUser.email) {
-  //     // Menggunakan status 400 Bad Request
-  //     return res.status(400).json({ message: "Nama dan email harus diisi." });
-  //   }
+    //   if (!newUser.name || !newUser.email) {
+    //     // Menggunakan status 400 Bad Request
+    //     return res.status(400).json({ message: "Nama dan email harus diisi." });
+    //   }
 
-  //   newUser.id = users.length + 1; // ID sementara
-  //   users.push(newUser);
+    //   newUser.id = users.length + 1; // ID sementara
+    //   users.push(newUser);
 
-  // Menggunakan status 201 Created
-  res.status(201).json({
-    message: url + " berhasil di scraping",
-    user: datas,
-  });
+    // Menggunakan status 201 Created
+    res.status(201).json({
+      message: url + " berhasil di scraping",
+      user: datas,
+    });
+  } catch (error) {
+    res.status(404).json({
+      message: url + " gagal di scraping",
+      user: error,
+    });
+  }
 });
 
 // Mengekspor router agar bisa digunakan di server.js

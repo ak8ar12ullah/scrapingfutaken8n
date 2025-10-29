@@ -61,8 +61,47 @@ export async function scrapeSocialMedia(url) {
     });
 
     console.log(`Mengunjungi: ${url}`);
+    let response;
+    const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
-    await page.goto(url, { waitUntil: "networkidle0", timeout: 60000 });
+    for (let i = 0; i < 3; i++) {
+      console.log(`Percobaan ke-${i + 1} untuk mengakses URL: ${url}`);
+
+      try {
+        // Coba navigasi ke URL dengan timeout 60 detik
+        response = await page.goto(url, {
+          waitUntil: "networkidle2",
+          // timeout: 60000,
+        });
+
+        // Cek kode status HTTP jika respons diterima
+        console.log(response.status());
+
+        if (response && response.status() === 200) {
+          console.log("✅ Berhasil: Halaman dimuat dengan status 200.");
+          break; // Keluar dari loop jika berhasil
+        } else {
+          const status = response ? response.status() : "N/A";
+          console.warn(
+            `❌ Gagal: Status HTTP non-200 (${status}). Mencoba lagi...`
+          );
+        }
+      } catch (error) {
+        await delay(1500);
+
+        console.error(
+          `❌ Gagal: Terjadi error atau timeout. Mencoba lagi. Error: ${error.message}`
+        );
+      }
+
+      // Hanya jeda jika ini BUKAN percobaan terakhir
+      if (i < 3 - 1) {
+        await delay(1500);
+      } else if (!response || response.status() !== 200) {
+        // Jika loop selesai dan masih gagal, tampilkan pesan kegagalan akhir
+        throw new Error(`Gagal memuat halaman`);
+      }
+    }
 
     // 1. Mengekstrak semua teks dan tautan (href) dari halaman
     const { allHrefs, pageText } = await page.evaluate(() => {
@@ -169,7 +208,7 @@ export async function scrapeSocialMedia(url) {
 
     return result;
   } catch (error) {
-    console.error("Scraping gagal:", error.message);
+    throw new Error("Scraping gagal:", error.message);
     return {};
   } finally {
     if (browserWeb) {
