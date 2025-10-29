@@ -34,13 +34,37 @@ export async function mapsScraper(urlDatas) {
     for (const url of externalLinks) {
       if (
         !website &&
-        !/facebook|instagram|twitter|tiktok|linkedin/i.test(url)
+        !/facebook|instagram|twitter|tiktok|linktree|linkedin/i.test(url)
       ) {
         website = url; // asumsikan ini website resmi
-      } else if (/facebook|instagram|twitter|tiktok|linkedin/i.test(url)) {
+      } else if (
+        /facebook|instagram|twitter|tiktok|linktree|linkedin/i.test(url)
+      ) {
         socials.push(url);
       }
     }
+    const socialObject = socials.reduce((acc, url) => {
+      const normalizedUrl = url.toLowerCase();
+
+      if (normalizedUrl.includes("facebook")) {
+        acc.facebook = url;
+      } else if (normalizedUrl.includes("instagram")) {
+        acc.instagram = url;
+      } else if (
+        normalizedUrl.includes("twitter") ||
+        normalizedUrl.includes("x.com")
+      ) {
+        acc.twitter = url; // atau 'x'
+      } else if (normalizedUrl.includes("tiktok")) {
+        acc.tiktok = url;
+      } else if (normalizedUrl.includes("linkedin")) {
+        acc.linkedin = url;
+      } else if (normalizedUrl.includes("linktr.ee")) {
+        acc.linktree = url;
+      }
+
+      return acc;
+    }, {});
 
     // results.push([phone, JSON.stringify(socials), email]);
 
@@ -49,7 +73,7 @@ export async function mapsScraper(urlDatas) {
     return {
       phone,
       email,
-      socials,
+      ...socialObject,
     };
   } catch (error) {
     throw new Error(error.message);
