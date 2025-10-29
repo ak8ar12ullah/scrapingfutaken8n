@@ -1,62 +1,51 @@
 // scraper.js
 
+import browserWeb from "./browserWeb.js";
+
 // 1. Ubah require() menjadi import
-import puppeteer from "puppeteer";
-
-// 2. Variabel dan Konstanta
-const SOCIAL_DOMAINS = {
-  instagram: "instagram.com",
-  facebook: "facebook.com",
-  "x (twitter)": "twitter.com",
-  "x (twitter) / x.com": "x.com",
-  tiktok: "tiktok.com",
-  linkedin: "linkedin.com",
-  linktree: "linktr.ee",
-};
-
-/**
- * Regex String untuk menemukan pola nomor telepon Indonesia yang valid.
- * Pola gabungan: Nomor padat (+62/08/02xx) ATAU Nomor terformat fleksibel.
- */
-const PHONE_REGEX_STRING =
-  // Pola 1: Nomor Seluler Padat (+62 atau 08), wajib 9-14 digit total. Paling aman dari pola tanggal.
-  "\\b(\\+?62|08)\\d{8,12}\\b" +
-  "|" + // ATAU
-  // Pola 2: Nomor Lokal Padat (Area Kode 02xx), wajib 9-11 digit total.
-  "\\b02\\d{7,9}\\b" +
-  "|" + // ATAU
-  // Pola 3: Nomor Terformat (Fleksibel dengan Spasi/Hyphen/Titik).
-  "\\b(\\+?\\d{1,4}[\\s\\.\\-]?\\d{2,4}[\\s\\.\\-]?\\d{3,4}[\\s\\.\\-]?\\d{3,4})\\b";
-
-// Definisikan PHONE_REGEX sebagai objek RegExp global
-const PHONE_REGEX = new RegExp(PHONE_REGEX_STRING, "g");
-
-/**
- * Regex standar untuk menemukan pola alamat email.
- * Contoh: user.name@domain.co.id
- */
-const EMAIL_REGEX = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g;
 
 // 3. Fungsi Utama
 export async function scrapeSocialMedia(url) {
-  let browser;
+  // 2. Variabel dan Konstanta
+  const SOCIAL_DOMAINS = {
+    instagram: "instagram.com",
+    facebook: "facebook.com",
+    "x (twitter)": "twitter.com",
+    "x (twitter) / x.com": "x.com",
+    tiktok: "tiktok.com",
+    linkedin: "linkedin.com",
+    linktree: "linktr.ee",
+  };
+
+  /**
+   * Regex String untuk menemukan pola nomor telepon Indonesia yang valid.
+   * Pola gabungan: Nomor padat (+62/08/02xx) ATAU Nomor terformat fleksibel.
+   */
+  const PHONE_REGEX_STRING =
+    // Pola 1: Nomor Seluler Padat (+62 atau 08), wajib 9-14 digit total. Paling aman dari pola tanggal.
+    "\\b(\\+?62|08)\\d{8,12}\\b" +
+    "|" + // ATAU
+    // Pola 2: Nomor Lokal Padat (Area Kode 02xx), wajib 9-11 digit total.
+    "\\b02\\d{7,9}\\b" +
+    "|" + // ATAU
+    // Pola 3: Nomor Terformat (Fleksibel dengan Spasi/Hyphen/Titik).
+    "\\b(\\+?\\d{1,4}[\\s\\.\\-]?\\d{2,4}[\\s\\.\\-]?\\d{3,4}[\\s\\.\\-]?\\d{3,4})\\b";
+
+  // Definisikan PHONE_REGEX sebagai objek RegExp global
+  const PHONE_REGEX = new RegExp(PHONE_REGEX_STRING, "g");
+
+  /**
+   * Regex standar untuk menemukan pola alamat email.
+   * Contoh: user.name@domain.co.id
+   */
+  const EMAIL_REGEX = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g;
+
   const foundUrlsMap = new Map();
   const foundPhonesSet = new Set();
   const foundEmailsSet = new Set();
 
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      slowMo: 100,
-      ignoreHTTPSErrors: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-extensions",
-      ],
-    });
-
-    const page = await browser.newPage();
+    const page = await browserWeb.newPage();
     await page.setViewport({ width: 1280, height: 720 });
     await page.setRequestInterception(true);
 
@@ -183,8 +172,8 @@ export async function scrapeSocialMedia(url) {
     console.error("Scraping gagal:", error.message);
     return {};
   } finally {
-    if (browser) {
-      await browser.close();
+    if (browserWeb) {
+      await browserWeb.close();
     }
   }
 }
