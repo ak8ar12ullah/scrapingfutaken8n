@@ -44,8 +44,9 @@ export async function scrapeSocialMedia(url) {
   const foundPhonesSet = new Set();
   const foundEmailsSet = new Set();
 
+  const page = await browserWeb.newPage();
+
   try {
-    const page = await browserWeb.newPage();
     await page.setViewport({ width: 1280, height: 720 });
     await page.setRequestInterception(true);
 
@@ -211,8 +212,8 @@ export async function scrapeSocialMedia(url) {
     throw new Error("Scraping gagal:", error.message);
     return {};
   } finally {
-    if (browserWeb) {
-      await browserWeb.close();
+    if (page) {
+      await page.close();
     }
   }
 }
